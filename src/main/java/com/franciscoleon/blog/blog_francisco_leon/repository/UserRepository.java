@@ -13,6 +13,8 @@ import org.springframework.stereotype.Repository;
 public interface UserRepository extends JpaRepository<User, Long> {
     User findByUsername(String username);
 
+    // git no me hagas llorar
+
     @Query("SELECT new com.franciscoleon.blog.blog_francisco_leon.model.dto.dtoparapruebas.PostSummaryDTO(" +
             "p.id, p.title, p.content, p.createdAt, p.updatedAt) " +
            "FROM User u LEFT JOIN u.posts p WHERE u.id = :userId")
