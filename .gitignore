@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+
+## CUANDO SE VAYA A DESPLEGAR QUITAR ESTO PARA QUE SE SUBA EL PROPERTIES 
+
+src/main/resources/application.properties
