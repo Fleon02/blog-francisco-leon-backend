@@ -17,12 +17,25 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT new com.franciscoleon.blog.blog_francisco_leon.model.dto.dtoparapruebas.PostSummaryDTO(" +
             "p.id, p.title, p.content, p.createdAt, p.updatedAt) " +
-           "FROM User u LEFT JOIN u.posts p WHERE u.id = :userId")
+            "FROM User u LEFT JOIN u.posts p WHERE u.id = :userId")
     List<PostSummaryDTO> findPostsLightByUserId(Long userId);
 
     @Query("""
-        SELECT u FROM User u
-        LEFT JOIN FETCH u.posts p
-    """)
+                SELECT u FROM User u
+                LEFT JOIN FETCH u.posts p
+            """)
     List<User> findAllUsersWithPosts();
+
+    @Query("SELECT new com.franciscoleon.blog.blog_francisco_leon.model.dto.dtoparapruebas.PostSummaryDTO(" +
+            "p.id, p.title, p.content, p.createdAt, p.updatedAt) " +
+            "FROM User u LEFT JOIN u.posts p " +
+            "WHERE u.id = :userId AND p.id = :postId")
+    PostSummaryDTO findPostLightByUserIdAndPostId(Long userId, Long postId);
+
+    @Query("""
+                SELECT DISTINCT u FROM User u
+                LEFT JOIN FETCH u.posts p
+            """)
+    List<User> findAllUsersWithPostsLight();
+
 }
