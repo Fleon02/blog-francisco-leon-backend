@@ -8,11 +8,7 @@ import com.franciscoleon.blog.blog_francisco_leon.model.dto.CategoryDTO;
 import com.franciscoleon.blog.blog_francisco_leon.model.dto.ElementDTO;
 import com.franciscoleon.blog.blog_francisco_leon.model.dto.PostCreateDTO;
 import com.franciscoleon.blog.blog_francisco_leon.model.dto.SubcategoryDTO;
-import com.franciscoleon.blog.blog_francisco_leon.model.entities.Category;
-import com.franciscoleon.blog.blog_francisco_leon.model.entities.Element;
 import com.franciscoleon.blog.blog_francisco_leon.model.entities.Post;
-import com.franciscoleon.blog.blog_francisco_leon.model.entities.Subcategory;
-import com.franciscoleon.blog.blog_francisco_leon.model.entities.User;
 import com.franciscoleon.blog.blog_francisco_leon.repository.CategoryRepository;
 import com.franciscoleon.blog.blog_francisco_leon.repository.ElementRepository;
 import com.franciscoleon.blog.blog_francisco_leon.repository.PostRepository;
@@ -82,7 +78,7 @@ public class PostServiceImpl implements PostService {
     @Transactional
     public Post createPost(PostCreateDTO dto) {
 
-
+        // Validar campos obligatorios
         if (dto.getUserId() == null) {
             throw new RuntimeException("El post debe tener un usuario");
         }
@@ -90,8 +86,6 @@ public class PostServiceImpl implements PostService {
         if (dto.getCategoryId() == null && dto.getSubcategoryId() == null && dto.getElementId() == null) {
             throw new RuntimeException("El post debe tener al menos una categoría, subcategoría o elemento");
         }
-
-        // Por ahora esto, a lo mejor en un futuro si se permite
 
         int count = 0;
         if (dto.getCategoryId() != null)
@@ -102,29 +96,39 @@ public class PostServiceImpl implements PostService {
             count++;
 
         if (count > 1) {
-            throw new RuntimeException("El post solo puede tener categoría, subcategoría o elemento, no más de uno");
+            throw new RuntimeException(
+                    "El post solo puede tener una categoría, subcategoría o elemento, no más de uno");
         }
 
         Post post = new Post();
 
-        User user = userRepository.findById(dto.getUserId())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        post.setUser(user);
+        // Validar y asignar el usuario
+        if (!userRepository.existsById(dto.getUserId())) {
+            throw new RuntimeException("Usuario con ID " + dto.getUserId() + " no encontrado");
+        }
+        post.setUser(userRepository.getReferenceById(dto.getUserId()));
 
+        // Validar y asignar categoría/subcategoría/elemento
         if (dto.getCategoryId() != null) {
-            Category category = categoryRepository.findById(dto.getCategoryId())
-                    .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
-            post.setCategory(category);
+            if (!categoryRepository.existsById(dto.getCategoryId())) {
+                throw new RuntimeException("Categoría con ID " + dto.getCategoryId() + " no encontrada");
+            }
+            post.setCategory(categoryRepository.getReferenceById(dto.getCategoryId()));
+
         } else if (dto.getSubcategoryId() != null) {
-            Subcategory subcategory = subcategoryRepository.findById(dto.getSubcategoryId())
-                    .orElseThrow(() -> new RuntimeException("Subcategoría no encontrada"));
-            post.setSubcategory(subcategory);
+            if (!subcategoryRepository.existsById(dto.getSubcategoryId())) {
+                throw new RuntimeException("Subcategoría con ID " + dto.getSubcategoryId() + " no encontrada");
+            }
+            post.setSubcategory(subcategoryRepository.getReferenceById(dto.getSubcategoryId()));
+
         } else if (dto.getElementId() != null) {
-            Element element = elementRepository.findById(dto.getElementId())
-                    .orElseThrow(() -> new RuntimeException("Elemento no encontrado"));
-            post.setElement(element);
+            if (!elementRepository.existsById(dto.getElementId())) {
+                throw new RuntimeException("Elemento con ID " + dto.getElementId() + " no encontrado");
+            }
+            post.setElement(elementRepository.getReferenceById(dto.getElementId()));
         }
 
+        // Asignar contenido del post
         post.setTitle(dto.getTitle());
         post.setContent(dto.getContent());
 

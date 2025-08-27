@@ -3,8 +3,8 @@ package com.franciscoleon.blog.blog_francisco_leon.controller;
 import com.franciscoleon.blog.blog_francisco_leon.model.dto.CategoryDTO;
 import com.franciscoleon.blog.blog_francisco_leon.model.dto.ElementDTO;
 import com.franciscoleon.blog.blog_francisco_leon.model.dto.PostCreateDTO;
+import com.franciscoleon.blog.blog_francisco_leon.model.dto.PostDTOLigero;
 import com.franciscoleon.blog.blog_francisco_leon.model.dto.SubcategoryDTO;
-import com.franciscoleon.blog.blog_francisco_leon.model.dto.dtoparapruebas.PostSummaryDTO;
 import com.franciscoleon.blog.blog_francisco_leon.model.dto.dtoparapruebas.SimpleUserDTO;
 import com.franciscoleon.blog.blog_francisco_leon.model.dto.dtoparapruebas.UserPasswordDTO;
 import com.franciscoleon.blog.blog_francisco_leon.model.dto.dtoparapruebas.UserWithPostsDTO;
@@ -46,6 +46,7 @@ public class TestController {
 
     @GetMapping("/users")
     public ResponseEntity<Map<String, Object>> getAllUsers() {
+        System.out.println("\nEntrando al endpoint: /users");
         List<SimpleUserDTO> users = userService.getAllUsersTEST();
         if (users.isEmpty()) {
             return createResponse(HttpStatus.NOT_FOUND, "No se encontraron usuarios", List.of());
@@ -55,6 +56,7 @@ public class TestController {
 
     @GetMapping("/users/{id}/password")
     public ResponseEntity<Map<String, Object>> getUserPassword(@PathVariable Long id) {
+        System.out.println("\nEntrando al endpoint: /users/" + id + "/password");
         UserPasswordDTO password = userService.getUserPasswordTEST(id);
         if (password == null) {
             return createResponse(HttpStatus.NOT_FOUND, "Usuario no encontrado", null);
@@ -64,6 +66,7 @@ public class TestController {
 
     @GetMapping("/users/userwithpassword")
     public ResponseEntity<Map<String, Object>> getUsersWithPasswords() {
+        System.out.println("\nEntrando al endpoint: /users/userwithpassword");
         Map<Long, Map<String, Object>> result = new HashMap<>();
         userService.getAllUsersTEST().forEach(u -> {
             Map<String, Object> innerMap = new HashMap<>();
@@ -78,35 +81,33 @@ public class TestController {
         return createResponse(HttpStatus.OK, "Usuarios con contraseñas encontrados", result);
     }
 
-    @GetMapping("/users/with-posts")
-    public ResponseEntity<Map<String, Object>> getUsersWithPosts() {
-        List<UserWithPostsDTO> users = userService.getUsersWithPosts();
-        if (users.isEmpty()) {
-            return createResponse(HttpStatus.NOT_FOUND, "No se encontraron usuarios con posts", List.of());
-        }
-        return createResponse(HttpStatus.OK, "Usuarios con posts encontrados", users);
-    }
-
     @GetMapping("/users/with-posts-light")
     public ResponseEntity<Map<String, Object>> getUsersWithPostsLight() {
-        //List<UserWithPostsDTO> users = userService.getUsersWithPostsLight();
-
-        //Probar version nueva
-        List<UserWithPostsDTO> users = userService.getUsersWithPostsLightV2();
+        System.out.println("\nEntrando al endpoint: /users/with-posts-light");
+        List<UserWithPostsDTO> users = userService.getUsersWithPostsLight();
         if (users.isEmpty()) {
             return createResponse(HttpStatus.NOT_FOUND, "No se encontraron usuarios con posts (light)", List.of());
         }
         return createResponse(HttpStatus.OK, "Usuarios con posts (light) encontrados", users);
     }
 
-    // TestController
+    @GetMapping("/users/with-posts-raw")
+    public ResponseEntity<Map<String, Object>> getUsersWithPostsRaw() {
+        System.out.println("\nEntrando al endpoint: /users/with-posts-raw");
+        List<UserWithPostsDTO> users = userService.getUsersWithPostsRaw();
+        if (users.isEmpty()) {
+            return createResponse(HttpStatus.NOT_FOUND, "No se encontraron usuarios con posts (raw)", List.of());
+        }
+        return createResponse(HttpStatus.OK, "Usuarios con posts (raw) encontrados", users);
+    }
+
     @GetMapping("/users/{userId}/posts-light/{postId}")
     public ResponseEntity<Map<String, Object>> getUserPostLight(
             @PathVariable Long userId,
             @PathVariable Long postId) {
-
+        System.out.println("\nEntrando al endpoint: /users/" + userId + "/posts-light/" + postId);
         try {
-            PostSummaryDTO post = userService.getUserPostLight(userId, postId);
+            PostDTOLigero post = userService.getUserPostLight(userId, postId);
             if (post == null) {
                 return createResponse(HttpStatus.NOT_FOUND,
                         "No se encontró el post " + postId + " para el usuario " + userId, null);
@@ -118,19 +119,11 @@ public class TestController {
         }
     }
 
-    @GetMapping("/users/with-posts-chatgpt")
-    public ResponseEntity<Map<String, Object>> chatGPT() {
-        List<UserWithPostsDTO> users = userService.getUsersWithPostsOptimized();
-        if (users.isEmpty()) {
-            return createResponse(HttpStatus.NOT_FOUND, "No se encontraron usuarios con posts optimizados", List.of());
-        }
-        return createResponse(HttpStatus.OK, "Usuarios con posts optimizados encontrados", users);
-    }
-
     // ------------------ CATEGORIAS, SUBCATEGORIAS Y ELEMENTOS ------------------
 
     @GetMapping("/categories")
     public ResponseEntity<Map<String, Object>> getCategories() {
+        System.out.println("\nEntrando al endpoint: /categories");
         List<CategoryDTO> categories = postService.getAllCategories();
         if (categories.isEmpty()) {
             return createResponse(HttpStatus.NOT_FOUND, "No se encontraron categorías", List.of());
@@ -140,6 +133,7 @@ public class TestController {
 
     @GetMapping("/subcategories")
     public ResponseEntity<Map<String, Object>> getSubcategories() {
+        System.out.println("\nEntrando al endpoint: /subcategories");
         List<SubcategoryDTO> subcategories = postService.getAllSubcategories();
         if (subcategories.isEmpty()) {
             return createResponse(HttpStatus.NOT_FOUND, "No se encontraron subcategorías", List.of());
@@ -149,6 +143,7 @@ public class TestController {
 
     @GetMapping("/elements")
     public ResponseEntity<Map<String, Object>> getElements() {
+        System.out.println("\nEntrando al endpoint: /elements");
         List<ElementDTO> elements = postService.getAllElements();
         if (elements.isEmpty()) {
             return createResponse(HttpStatus.NOT_FOUND, "No se encontraron elementos", List.of());
@@ -158,6 +153,7 @@ public class TestController {
 
     @GetMapping("/subcategories/category/{categoryId}")
     public ResponseEntity<Map<String, Object>> getSubcategoriesByCategory(@PathVariable Long categoryId) {
+        System.out.println("\nEntrando al endpoint: /subcategories/category/" + categoryId);
         List<SubcategoryDTO> subcategories = postService.getSubcategoriesByCategory(categoryId);
         if (subcategories.isEmpty()) {
             return createResponse(HttpStatus.NOT_FOUND,
@@ -168,6 +164,7 @@ public class TestController {
 
     @GetMapping("/elements/subcategory/{subcategoryId}")
     public ResponseEntity<Map<String, Object>> getElementsBySubcategory(@PathVariable Long subcategoryId) {
+        System.out.println("\nEntrando al endpoint: /elements/subcategory/" + subcategoryId);
         List<ElementDTO> elements = postService.getElementsBySubcategory(subcategoryId);
         if (elements.isEmpty()) {
             return createResponse(HttpStatus.NOT_FOUND,
@@ -180,6 +177,7 @@ public class TestController {
 
     @PostMapping("/create-post")
     public ResponseEntity<Map<String, Object>> createPost(@RequestBody PostCreateDTO dto) {
+        System.out.println("\nEntrando al endpoint: /create-post");
         try {
             Post post = postService.createPost(dto);
 
@@ -193,9 +191,8 @@ public class TestController {
             return createResponse(HttpStatus.CREATED, "Post creado correctamente", postResponse);
 
         } catch (RuntimeException e) {
-            // Captura errores como "usuario no encontrado" o "ninguna referencia"
             return createResponse(HttpStatus.BAD_REQUEST, e.getMessage(), null);
         }
-    }
 
+    }
 }

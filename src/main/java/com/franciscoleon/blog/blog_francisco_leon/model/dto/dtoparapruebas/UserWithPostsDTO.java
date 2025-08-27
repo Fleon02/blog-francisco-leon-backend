@@ -2,6 +2,8 @@ package com.franciscoleon.blog.blog_francisco_leon.model.dto.dtoparapruebas;
 
 import java.util.List;
 
+import com.franciscoleon.blog.blog_francisco_leon.model.dto.PostDTOLigero;
+
 
 /**
  *
@@ -13,21 +15,20 @@ public class UserWithPostsDTO {
     private Long id;
     private String username;
     private String email;
-    private String role;
-    private Boolean active;
-    private List<PostSummaryDTO> posts;
+    private List<PostDTOLigero> posts;
 
-    public UserWithPostsDTO(Long id, String username, String email, String role, Boolean active, List<PostSummaryDTO> posts) {
+    // Constructor vacío
+    public UserWithPostsDTO() {}
+
+    // Constructor con parámetros
+    public UserWithPostsDTO(Long id, String username, String email, List<PostDTOLigero> posts) {
         this.id = id;
         this.username = username;
         this.email = email;
-        this.role = role;
-        this.active = active;
         this.posts = posts;
     }
 
-    // getters y setters
-
+    // Getters y Setters
     public Long getId() {
         return id;
     }
@@ -52,27 +53,11 @@ public class UserWithPostsDTO {
         this.email = email;
     }
 
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
-
-    public Boolean getActive() {
-        return active;
-    }
-
-    public void setActive(Boolean active) {
-        this.active = active;
-    }
-
-    public List<PostSummaryDTO> getPosts() {
+    public List<PostDTOLigero> getPosts() {
         return posts;
     }
 
-    public void setPosts(List<PostSummaryDTO> posts) {
+    public void setPosts(List<PostDTOLigero> posts) {
         this.posts = posts;
     }
 }

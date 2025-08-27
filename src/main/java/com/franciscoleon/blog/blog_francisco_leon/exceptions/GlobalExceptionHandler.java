@@ -9,6 +9,8 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import jakarta.persistence.EntityNotFoundException;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -24,9 +26,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleJsonParseError(HttpMessageNotReadableException ex) {
         Map<String, Object> body = new HashMap<>();
         body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("message", "Formato JSON inválido o tipo de dato incorrecto");
-        body.put("error", ex.getLocalizedMessage());
+        body.put("message", "Formato JSON inválido o tipo de dato incorrecto.");
         return ResponseEntity.badRequest().body(body);
+    }
+
+    // Maneja error cuando el ID de una entidad no existe
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleEntityNotFound(EntityNotFoundException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("status", HttpStatus.NOT_FOUND.value());
+        body.put("message", ex.getMessage() != null ? ex.getMessage() : "El recurso solicitado no existe.");
+        body.put("error", "Entidad no encontrada con el ID proporcionado.");
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
 }
