@@ -15,6 +15,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
         User findByUsername(String username);
 
+        User findByEmail(String email);
+
+        boolean existsByUsername(String username);
+
+        boolean existsByEmail(String email);
+
         @Query("SELECT new com.franciscoleon.blog.blog_francisco_leon.model.dto.PostDTOLigero(" +
                         "p.id, p.title, p.content, p.createdAt) " +
                         "FROM User u LEFT JOIN u.posts p WHERE u.id = :userId")

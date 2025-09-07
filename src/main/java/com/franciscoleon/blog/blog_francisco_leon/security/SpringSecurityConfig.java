@@ -38,6 +38,7 @@ public class SpringSecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api/test/**").permitAll() // Permite todos los endpoints de prueba
+                        .requestMatchers("/api/auth/**").permitAll() // Permite todos los endpoints de autenticación
                         .anyRequest().authenticated() // Otros requieren autenticación (si agregas seguridad después)
                 );
 
