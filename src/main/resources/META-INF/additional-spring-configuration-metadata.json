@@ -1,0 +1,15 @@
+{
+  "properties": [
+    {
+      "name": "app.frontend.url",
+      "type": "java.lang.String",
+      "description": "URL del frontend de la aplicación",
+      "defaultValue": "http://localhost:4321"
+    },
+    {
+      "name": "app.jwt.secret",
+      "type": "java.lang.String",
+      "description": "Clave secreta para firmar tokens JWT"
+    }
+  ]
+}

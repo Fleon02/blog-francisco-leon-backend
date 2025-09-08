@@ -19,8 +19,9 @@ public class AuthService {
 
     /**
      * Registrar un usuario nuevo.
-     * @param username Nombre de usuario
-     * @param email Correo electrónico
+     * 
+     * @param username    Nombre de usuario
+     * @param email       Correo electrónico
      * @param rawPassword Contraseña en texto plano
      * @return Usuario registrado
      */
@@ -42,23 +43,25 @@ public class AuthService {
 
     /**
      * Verifica login de usuario.
-     * @param username Nombre de usuario
+     * 
+     * @param username    Nombre de usuario
      * @param rawPassword Contraseña en texto plano
-     * @return true si login válido
+     * @return Usuario autenticado o null
      */
     @Transactional(readOnly = true)
-    public boolean login(String username, String rawPassword) {
+    public User login(String username, String rawPassword) {
         User user = userRepository.findByUsername(username);
 
-        if (user == null || !user.getActive()) {
-            return false;
+        if (user == null || !user.getActive() || !passwordEncoder.matches(rawPassword, user.getPassword())) {
+            return null; // login fallido
         }
 
-        return passwordEncoder.matches(rawPassword, user.getPassword());
+        return user; // login exitoso
     }
 
     /**
      * Busca usuario por username.
+     * 
      * @param username Nombre de usuario
      * @return Usuario encontrado o null
      */

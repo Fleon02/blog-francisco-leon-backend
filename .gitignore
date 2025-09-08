@@ -32,7 +32,13 @@ build/
 ### VS Code ###
 .vscode/
 
+# =======================================================
+# ARCHIVOS DE CONFIGURACIÓN CON SECRETOS
+# =======================================================
+# Solo los archivos que contienen secretos reales
+src/main/resources/application-dev.properties
 
-## CUANDO SE VAYA A DESPLEGAR QUITAR ESTO PARA QUE SE SUBA EL PROPERTIES 
-
-src/main/resources/application.properties
+# MANTENER ESTOS ARCHIVOS EN GIT:
+# - application.properties (configuración base)
+# - application-prod.properties (usa variables de entorno)
+# - application-test.properties (para testing)
