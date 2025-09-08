@@ -3,6 +3,7 @@ package com.franciscoleon.blog.blog_francisco_leon.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
+import org.springframework.core.env.Environment;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -27,9 +28,12 @@ public class SpringSecurityConfig {
 
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
-    
+
     @Autowired
     private AppConfig appConfig; // ✅ Inyectar correctamente
+
+    @Autowired
+    private Environment env; // Para leer el profile activo
 
     // Codificador de contraseñas
     @Bean
@@ -59,20 +63,25 @@ public class SpringSecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // ✅ Usar la instancia inyectada, no crear una nueva
         String frontendUrl = appConfig.getFrontend().getUrl();
 
-        // Si la variable de entorno no está definida, usar el valor por defecto
         if (frontendUrl == null || frontendUrl.isEmpty()) {
-            frontendUrl = "http://localhost:4321"; // fallback en desarrollo
-            System.out.println("[CORS CONFIG] FRONTEND_URL (fallback): " + frontendUrl);
+            frontendUrl = "http://localhost:4321"; // fallback
         }
 
-        // Mostrar en consola qué URL está usando
-        System.out.println("[CORS CONFIG] FRONTEND_URL: " + frontendUrl);
-        System.out.println("SECRET KEY: " + appConfig.getJwt().getSecret()); // Para depuración
+        // Leer profile activo
+        String activeProfile = Arrays.stream(env.getActiveProfiles()).findFirst().orElse("dev");
 
-        configuration.setAllowedOriginPatterns(Arrays.asList(frontendUrl)); // Permitir solo la URL del frontend
+        if (activeProfile.equals("dev")) {
+            // Modo desarrollo: permitir cualquier origen
+            configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+            System.out.println("[CORS CONFIG] DEV: Se permiten todos los orígenes");
+        } else {
+            // Producción: solo frontendUrl
+            configuration.setAllowedOriginPatterns(Arrays.asList(frontendUrl));
+            System.out.println("[CORS CONFIG] PROD: Se permite solo " + frontendUrl);
+        }
+
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Content-Type", "Authorization"));
         configuration.setAllowCredentials(true);
