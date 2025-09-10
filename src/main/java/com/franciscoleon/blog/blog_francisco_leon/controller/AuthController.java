@@ -1,7 +1,6 @@
 package com.franciscoleon.blog.blog_francisco_leon.controller;
 
 import com.franciscoleon.blog.blog_francisco_leon.model.dto.LoginDTO;
-import com.franciscoleon.blog.blog_francisco_leon.model.dto.RegisterDTO;
 import com.franciscoleon.blog.blog_francisco_leon.model.entities.User;
 import com.franciscoleon.blog.blog_francisco_leon.security.JwtService;
 import com.franciscoleon.blog.blog_francisco_leon.service.AuthService;
@@ -40,22 +39,17 @@ public class AuthController {
         return ResponseEntity.status(status).body(body);
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<Map<String, Object>> register(@RequestBody RegisterDTO request) {
-        try {
-            User newUser = authService.register(request.getUsername(), request.getEmail(), request.getPassword());
-            Map<String, Object> data = new HashMap<>();
-            data.put("username", newUser.getUsername());
-            data.put("email", newUser.getEmail());
-            return createResponse(HttpStatus.CREATED, "Usuario registrado con éxito", data);
-        } catch (RuntimeException e) {
-            return createResponse(HttpStatus.BAD_REQUEST, e.getMessage(), null);
-        }
-    }
-
+    /**
+     * Autenticación de usuario
+     *
+     * @param request Contiene el email y password para autenticar al usuario
+     * @return Un objeto con la información del usuario autenticado y el token JWT
+     *         en caso de que la autenticación sea correcta, o un objeto con el
+     *         mensaje de error en caso de que la autenticación sea incorrecta
+     */
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody LoginDTO request) {
-        User user = authService.login(request.getUsername(), request.getPassword());
+        User user = authService.login(request.getEmail(), request.getPassword());
 
         if (user != null) {
             // 🔑 Generamos el token JWT usando JwtService

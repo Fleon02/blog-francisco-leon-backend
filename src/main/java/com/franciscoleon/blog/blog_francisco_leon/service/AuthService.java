@@ -43,14 +43,14 @@ public class AuthService {
 
     /**
      * Verifica login de usuario.
-     * 
-     * @param username    Nombre de usuario
+     *
+     * @param email       Correo electrónico
      * @param rawPassword Contraseña en texto plano
      * @return Usuario autenticado o null
      */
     @Transactional(readOnly = true)
-    public User login(String username, String rawPassword) {
-        User user = userRepository.findByUsername(username);
+    public User login(String email, String rawPassword) {
+        User user = userRepository.findByEmail(email);
 
         if (user == null || !user.getActive() || !passwordEncoder.matches(rawPassword, user.getPassword())) {
             return null; // login fallido

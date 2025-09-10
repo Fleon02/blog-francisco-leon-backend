@@ -52,6 +52,7 @@ public class SpringSecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api/test/**").hasAnyAuthority("ADMIN") // Probar autentificacion con Test
                         .requestMatchers("/api/auth/**").permitAll() // Permite todos los endpoints de autenticación
+                        .requestMatchers("/api/auth-cookie/**").permitAll() // Permite todos los endpoints de autenticación con cookies
                         .anyRequest().authenticated() // Otros requieren autenticación
                 );
 

@@ -33,6 +33,7 @@ public class JwtService {
         Map<String, Object> claims = new HashMap<>();
         List<String> roles = List.of(usuario.getRole().name());
         claims.put("roles", roles);
+        claims.put("username", usuario.getUsername());
 
         log.debug("Generando token JWT para usuario: {}", usuario.getEmail());
 

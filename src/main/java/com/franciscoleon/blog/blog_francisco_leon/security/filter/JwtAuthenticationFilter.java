@@ -19,6 +19,7 @@ import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebFilter;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -36,34 +37,40 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = request.getHeader(TokenJwtConfig.HEADER_AUTHORIZATION);
 
-        if (token != null && token.startsWith(TokenJwtConfig.PREFIX_TOKEN)) {
-            token = token.substring(TokenJwtConfig.PREFIX_TOKEN.length());
-
-            if (jwtService.esTokenValido(token)) {
-                String email = jwtService.obtenerEmailDelToken(token);
-                Claims claims = jwtService.obtenerClaims(token);
-
-                // Extraemos los roles desde el token
-                @SuppressWarnings("unchecked")
-                List<String> roles = claims.get("roles", List.class);
-
-                //roles.forEach(System.out::println);
-
-                // Creamos la autoridad basada en los roles
-                List<GrantedAuthority> authorities = roles.stream()
-                        .map(SimpleGrantedAuthority::new)
-                        .collect(Collectors.toList());
-
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        email,
-                        null,
-                        authorities);
-
-                // Verifica el contexto de seguridad
-                //System.out.println("Authorities asignadas: " + authorities);
-
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+        // Si no está en header, buscar en cookie
+        if (token == null) {
+            logger.warn("No se encontró token en el header, buscando en cookies...");
+            if (request.getCookies() != null) {
+                for (Cookie cookie : request.getCookies()) {
+                    if ("token".equals(cookie.getName())) { // Cambia "JWT" por el nombre de tu cookie
+                        token = cookie.getValue();
+                        break;
+                    }
+                }
+            }else{
+                logger.warn("No se encontraron cookies en la solicitud");
             }
+        } else if (token.startsWith(TokenJwtConfig.PREFIX_TOKEN)) {
+            token = token.substring(TokenJwtConfig.PREFIX_TOKEN.length());
+        }
+
+        if (token != null && jwtService.esTokenValido(token)) {
+            String email = jwtService.obtenerEmailDelToken(token);
+            Claims claims = jwtService.obtenerClaims(token);
+
+            @SuppressWarnings("unchecked")
+            List<String> roles = claims.get("roles", List.class);
+
+            List<GrantedAuthority> authorities = roles.stream()
+                    .map(SimpleGrantedAuthority::new)
+                    .collect(Collectors.toList());
+
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                    email,
+                    null,
+                    authorities);
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
         filterChain.doFilter(request, response);

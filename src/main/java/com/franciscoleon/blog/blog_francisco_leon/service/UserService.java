@@ -51,4 +51,5 @@ public interface UserService {
      * @return
      */
     PostDTOLigero getUserPostLight(Long userId, Long postId);
+    
 }
