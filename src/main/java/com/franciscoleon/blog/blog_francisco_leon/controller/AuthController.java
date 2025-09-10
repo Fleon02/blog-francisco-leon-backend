@@ -99,6 +99,7 @@ public class AuthController {
             response.put("valid", true);
             response.put("email", claims.getSubject());
             response.put("roles", claims.get("roles"));
+            response.put("usuario", claims.get("username"));
             response.put("expiresAt", claims.getExpiration());
 
         } else {

@@ -53,6 +53,7 @@ public class SpringSecurityConfig {
                         .requestMatchers("/api/test/**").hasAnyAuthority("ADMIN") // Probar autentificacion con Test
                         .requestMatchers("/api/auth/**").permitAll() // Permite todos los endpoints de autenticación
                         .requestMatchers("/api/auth-cookie/**").permitAll() // Permite todos los endpoints de autenticación con cookies
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll() // Permite Swagger, por ahora, luego en producción se puede quitara y no se podra acceder
                         .anyRequest().authenticated() // Otros requieren autenticación
                 );
 
