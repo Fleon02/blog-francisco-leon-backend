@@ -23,17 +23,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Controlador de autenticación usando cookies HttpOnly para almacenar el token
- * JWT.
- * Igual que AuthController pero usando cookies en lugar de enviar el token en
- * el body.
- * Aun no se si utilizar este o el otro, por ahora los mantengo ambos.
- * Luego decidiré cual usar. Lo ideal sería usar este con cookies HttpOnly para
- * mayor seguridad.
- * Mas que nada porque no se si en el frontend voy a usar Cookies o
- * LocalStorage.
- * Proporciona endpoints para login, obtener información del usuario autenticado
- * y logout.
+ * YA NO SE VA A USAR, SE DEJA SOLO COMO REFERENCIA PARA AUTENTICACIÓN CON COOKIES
+ * PORQUE LAS COOKIES NO FUNCIONAN BIEN EN EL ENTORNO DE DESARROLLO
  */
 @RestController
 @RequestMapping("/api/auth-cookie")
@@ -102,6 +93,8 @@ public class AuthCookieController {
         String activeProfile = Arrays.stream(env.getActiveProfiles()).findFirst().orElse("dev");
         if (activeProfile.equals("dev")) {
             log.info("[AUTH COOKIE] Modo desarrollo: se permite el uso de cookies no seguras");
+            cookie.setDomain("192.168.1.89"); // IP local para pruebas en red local
+            //
             cookie.setSecure(false); // localhost
             cookie.setMaxAge(24 * 60 * 60);
             response.addCookie(cookie);
