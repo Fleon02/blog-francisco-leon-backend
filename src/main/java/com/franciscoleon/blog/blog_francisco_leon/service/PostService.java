@@ -3,12 +3,16 @@ package com.franciscoleon.blog.blog_francisco_leon.service;
 import com.franciscoleon.blog.blog_francisco_leon.model.dto.CategoryDTO;
 import com.franciscoleon.blog.blog_francisco_leon.model.dto.ElementDTO;
 import com.franciscoleon.blog.blog_francisco_leon.model.dto.PostCreateDTO;
+import com.franciscoleon.blog.blog_francisco_leon.model.dto.PostDTOLigero;
+import com.franciscoleon.blog.blog_francisco_leon.model.dto.PostDTOVisual;
 import com.franciscoleon.blog.blog_francisco_leon.model.dto.SubcategoryDTO;
 import com.franciscoleon.blog.blog_francisco_leon.model.entities.Post;
 
 import java.util.List;
 
 public interface PostService {
+
+    List<PostDTOLigero> getAllPostsOfUserByEmail(String email);
 
     /**
      * Encuentra todas las categorias en la base de datos y las devuelve como una
@@ -66,4 +70,7 @@ public interface PostService {
      * @return el post creado
      */
     Post createPost(PostCreateDTO postCreateDTO);
+
+
+    PostDTOVisual getPostVisualById(Long postId);
 }

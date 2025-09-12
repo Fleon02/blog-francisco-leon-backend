@@ -21,11 +21,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
         boolean existsByEmail(String email);
 
-        @Query("SELECT new com.franciscoleon.blog.blog_francisco_leon.model.dto.PostDTOLigero(" +
-                        "p.id, p.title, p.content, p.createdAt) " +
-                        "FROM User u LEFT JOIN u.posts p WHERE u.id = :userId")
-        List<PostDTOLigero> findPostsLightByUserId(@Param("userId") Long userId);
-
 
         @Query("SELECT new com.franciscoleon.blog.blog_francisco_leon.model.dto.PostDTOLigero(" +
                         "p.id, p.title, p.content, p.createdAt) " +
@@ -45,5 +40,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
                             LEFT JOIN u.posts p
                         """)
         List<Object[]> findAllUsersWithPostsLightRaw();
+
+        @Query("""
+                            SELECT u.id, u.username, u.email, p.id, p.title, p.content, p.createdAt
+                            FROM User u
+                            LEFT JOIN u.posts p
+                            WHERE u.id = :userId
+                        """)
+        Object[] findUserWithPostsLightRaw(@Param("userId") Long userId);
 
 }

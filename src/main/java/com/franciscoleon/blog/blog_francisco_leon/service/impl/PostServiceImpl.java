@@ -7,6 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.franciscoleon.blog.blog_francisco_leon.model.dto.CategoryDTO;
 import com.franciscoleon.blog.blog_francisco_leon.model.dto.ElementDTO;
 import com.franciscoleon.blog.blog_francisco_leon.model.dto.PostCreateDTO;
+import com.franciscoleon.blog.blog_francisco_leon.model.dto.PostDTOLigero;
+import com.franciscoleon.blog.blog_francisco_leon.model.dto.PostDTOVisual;
 import com.franciscoleon.blog.blog_francisco_leon.model.dto.SubcategoryDTO;
 import com.franciscoleon.blog.blog_francisco_leon.model.entities.Post;
 import com.franciscoleon.blog.blog_francisco_leon.repository.CategoryRepository;
@@ -25,6 +27,7 @@ import com.franciscoleon.blog.blog_francisco_leon.service.PostService;
  */
 @Service("postServiceV1")
 public class PostServiceImpl implements PostService {
+    
 
     private final CategoryRepository categoryRepository;
 
@@ -133,6 +136,34 @@ public class PostServiceImpl implements PostService {
         post.setContent(dto.getContent());
 
         return postRepository.save(post);
+    }
+
+    @Override
+    public List<PostDTOLigero> getAllPostsOfUserByEmail(String email) {
+        
+        if (email == null || email.isBlank()) {
+            throw new RuntimeException("El email no puede ser nulo o vacío");
+        }
+
+        var user = userRepository.findByEmail(email);
+        if (user == null) {
+            throw new RuntimeException("Usuario con email " + email + " no encontrado");
+        }
+
+        return postRepository.findPostsLightByUserId(user.getId());
+    }
+
+    @Override
+    public PostDTOVisual getPostVisualById(Long postId) {
+
+
+        if (postId == null) {
+            throw new RuntimeException("El ID del post no puede ser nulo");
+        }
+
+
+
+        return postRepository.findPostVisualById(postId);
     }
 
 }
