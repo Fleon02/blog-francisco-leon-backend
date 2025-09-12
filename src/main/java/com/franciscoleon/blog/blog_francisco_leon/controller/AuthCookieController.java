@@ -16,14 +16,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * YA NO SE VA A USAR, SE DEJA SOLO COMO REFERENCIA PARA AUTENTICACIÓN CON COOKIES
+ * YA NO SE VA A USAR, SE DEJA SOLO COMO REFERENCIA PARA AUTENTICACIÓN CON
+ * COOKIES
  * PORQUE LAS COOKIES NO FUNCIONAN BIEN EN EL ENTORNO DE DESARROLLO
  */
 @RestController
@@ -71,7 +74,7 @@ public class AuthCookieController {
      * (localhost). En ambos casos, se establece el parámetro "HttpOnly" en
      * true.
      *
-     * @param request Credenciales del usuario
+     * @param request  Credenciales del usuario
      * @param response Respuesta HTTP
      * @return Un objeto ResponseEntity con un body que contiene los atributos
      *         "status", "message" y "data". El atributo "data" contiene un
@@ -79,39 +82,61 @@ public class AuthCookieController {
      *         autenticado.
      */
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody LoginDTO request, HttpServletResponse response) {
+    public ResponseEntity<Map<String, Object>> login(@RequestBody LoginDTO request,
+            HttpServletRequest httpRequest,
+            HttpServletResponse response) {
+        // Logs de debugging
+        String origin = httpRequest.getHeader("Origin");
+        String userAgent = httpRequest.getHeader("User-Agent");
+        String host = httpRequest.getHeader("Host");
+
+        log.info("=== DEBUG COOKIE ===");
+        log.info("[DEBUG] Origin: {}", origin);
+        log.info("[DEBUG] Host: {}", host);
+        log.info("[DEBUG] User-Agent: {}", userAgent);
+        log.info("[DEBUG] Request URL: {}", httpRequest.getRequestURL());
+
         User user = authService.login(request.getEmail(), request.getPassword());
         if (user == null) {
             return createResponse(HttpStatus.UNAUTHORIZED, "Credenciales inválidas", null);
         }
 
         String token = jwtService.generarToken(user);
-        Cookie cookie = new Cookie("token", token);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-
         String activeProfile = Arrays.stream(env.getActiveProfiles()).findFirst().orElse("dev");
+
+        log.info("[DEBUG] Active Profile: {}", activeProfile);
+        log.info("[DEBUG] Token generado: {}", token.substring(0, 20) + "...");
+
         if (activeProfile.equals("dev")) {
-            log.info("[AUTH COOKIE] Modo desarrollo: se permite el uso de cookies no seguras");
-            cookie.setDomain("192.168.1.89"); // IP local para pruebas en red local
-            //
-            cookie.setSecure(false); // localhost
-            cookie.setMaxAge(24 * 60 * 60);
-            response.addCookie(cookie);
+            log.info("[DEBUG] Configurando cookie para desarrollo");
+
+            // Método 2: Header Set-Cookie manual (más control)
+            String setCookieHeader = String.format(
+                    "token=%s; Max-Age=%d; Path=/; HttpOnly; SameSite=Lax",
+                    token, 24 * 60 * 60);
+            response.addHeader("Set-Cookie", setCookieHeader);
+            log.info("[DEBUG] Header Set-Cookie agregado: {}", setCookieHeader);
+
         } else {
-            log.info("[AUTH COOKIE] Modo producción: se usan cookies seguras");
-            // producción: Render + Netlify
-            response.addHeader("Set-Cookie",
-                    String.format("token=%s; Max-Age=%d; Path=/; Secure; HttpOnly; SameSite=None",
-                            token,
-                            24 * 60 * 60));
+            log.info("[DEBUG] Configurando cookie para producción");
+            String setCookieHeader = String.format(
+                    "token=%s; Max-Age=%d; Path=/; Secure; HttpOnly; SameSite=None",
+                    token, 24 * 60 * 60);
+            response.addHeader("Set-Cookie", setCookieHeader);
+            log.info("[DEBUG] Header Set-Cookie (PROD): {}", setCookieHeader);
         }
+
+        // Verificar que el header se estableció
+        Collection<String> cookieHeaders = response.getHeaders("Set-Cookie");
+        log.info("[DEBUG] Headers Set-Cookie en response: {}", cookieHeaders);
+        log.info("[DEBUG] Todos los headers: {}", response.getHeaderNames());
 
         Map<String, Object> data = new HashMap<>();
         data.put("username", user.getUsername());
         data.put("email", user.getEmail());
         data.put("role", user.getRole().name());
 
+        log.info("=== FIN DEBUG COOKIE ===");
         return createResponse(HttpStatus.OK, "Login correcto con cookie", data);
     }
 
@@ -143,7 +168,6 @@ public class AuthCookieController {
         return ResponseEntity.ok(response);
     }
 
-
     /**
      * Cierra la sesión actual y borra la cookie de autenticación.
      *
@@ -157,6 +181,8 @@ public class AuthCookieController {
      */
     @PostMapping("/logout")
     public ResponseEntity<Map<String, Object>> logout(HttpServletResponse response) {
+
+        log.info("Logout");
         Cookie cookie = new Cookie("token", null);
         cookie.setHttpOnly(true);
         cookie.setPath("/");

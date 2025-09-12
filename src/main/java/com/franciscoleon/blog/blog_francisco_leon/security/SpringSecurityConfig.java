@@ -30,63 +30,73 @@ public class SpringSecurityConfig {
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Autowired
-    private AppConfig appConfig; // ✅ Inyectar correctamente
+    private AppConfig appConfig;
 
     @Autowired
-    private Environment env; // Para leer el profile activo
+    private Environment env;
 
-    // Codificador de contraseñas
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // Configuración de seguridad principal
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Habilita CORS
-                .csrf(csrf -> csrf.disable()) // Deshabilita CSRF para APIs
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/test/**").hasAnyAuthority("ADMIN") // Probar autentificacion con Test
-                        .requestMatchers("/api/auth/**").permitAll() // Permite todos los endpoints de autenticación
-                        .requestMatchers("/api/auth-cookie/**").permitAll() // Permite todos los endpoints de autenticación con cookies
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll() // Permite Swagger, por ahora, luego en producción se puede quitara y no se podra acceder
-                        .anyRequest().authenticated() // Otros requieren autenticación
+                        .requestMatchers("/api/test/**").hasAnyAuthority("ADMIN")
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth-cookie/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .anyRequest().authenticated()
                 );
 
         return http.build();
     }
 
-    // Configuración global de CORS
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        String frontendUrl = appConfig.getFrontend().getUrl();
-
-        if (frontendUrl == null || frontendUrl.isEmpty()) {
-            frontendUrl = "http://localhost:4321"; // fallback
-        }
-
-        // Leer profile activo
         String activeProfile = Arrays.stream(env.getActiveProfiles()).findFirst().orElse("dev");
-
+        
         if (activeProfile.equals("dev")) {
-            // Modo desarrollo: permitir cualquier origen
-            configuration.setAllowedOriginPatterns(Arrays.asList("*"));
-            System.out.println("[CORS CONFIG] DEV: Se permiten todos los orígenes");
+            // Desarrollo: permitir orígenes locales específicos
+            configuration.setAllowedOriginPatterns(Arrays.asList(
+                "http://localhost:*",
+                "http://127.0.0.1:*", 
+                "http://192.168.1.*:*",
+                "http://10.0.2.*:*" // Para emuladores Android
+            ));
+            System.out.println("[CORS CONFIG] DEV: Permitiendo orígenes locales");
         } else {
-            // Producción: solo frontendUrl
+            // Producción: solo frontendUrl específico
+            String frontendUrl = appConfig.getFrontend().getUrl();
+            if (frontendUrl == null || frontendUrl.isEmpty()) {
+                frontendUrl = "https://your-frontend-domain.com"; // Cambiar por tu dominio real
+            }
             configuration.setAllowedOriginPatterns(Arrays.asList(frontendUrl));
-            System.out.println("[CORS CONFIG] PROD: Se permite solo " + frontendUrl);
+            System.out.println("[CORS CONFIG] PROD: Permitiendo solo " + frontendUrl);
         }
 
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Content-Type", "Authorization"));
+        // Métodos permitidos
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        
+        // Headers permitidos - IMPORTANTE para cookies
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        
+        // Headers expuestos
+        configuration.setExposedHeaders(Arrays.asList("Set-Cookie", "Authorization"));
+        
+        // CRÍTICO: permitir credenciales (cookies)
         configuration.setAllowCredentials(true);
+        
+        // Configurar max age para preflight
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
@@ -94,7 +104,6 @@ public class SpringSecurityConfig {
         return source;
     }
 
-    // Registrar el filtro CORS con alta prioridad
     @Bean
     public FilterRegistrationBean<CorsFilter> corsFilter() {
         FilterRegistrationBean<CorsFilter> registrationBean = new FilterRegistrationBean<>(
