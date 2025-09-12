@@ -49,7 +49,7 @@ public class PostController {
 
     @GetMapping("getPostVisual/{postId}")
     public ResponseEntity<Map<String, Object>> getPostVisualById(@PathVariable Long postId) {
-        System.out.println("Received postId: " + postId); // Log para depuración
+        System.err.println("\n\n\npostId: " + postId);
         try {
             var post = postService.getPostVisualById(postId);
 

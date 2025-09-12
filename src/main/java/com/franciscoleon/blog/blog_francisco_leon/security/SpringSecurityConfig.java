@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -48,10 +49,20 @@ public class SpringSecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/test/**").hasAnyAuthority("ADMIN")
+                        // Rutas públicas - ORDEN IMPORTANTE: más específicas primero
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/auth-cookie/**").permitAll()
+                        .requestMatchers("/health").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        
+                        // Rutas con roles específicos
+                        .requestMatchers("/api/test/**").hasAnyAuthority("ADMIN")
+                        
+                        // Rutas de posts - TEMPORALMENTE TODAS AUTHENTICATED PARA DEBUG
+                        .requestMatchers("/api/posts/**").authenticated()
+                        
+                        // Por defecto, todo requiere autenticación
                         .anyRequest().authenticated()
                 );
 
@@ -65,37 +76,26 @@ public class SpringSecurityConfig {
         String activeProfile = Arrays.stream(env.getActiveProfiles()).findFirst().orElse("dev");
         
         if (activeProfile.equals("dev")) {
-            // Desarrollo: permitir orígenes locales específicos
             configuration.setAllowedOriginPatterns(Arrays.asList(
                 "http://localhost:*",
                 "http://127.0.0.1:*", 
                 "http://192.168.1.*:*",
-                "http://10.0.2.*:*" // Para emuladores Android
+                "http://10.0.2.*:*"
             ));
             System.out.println("[CORS CONFIG] DEV: Permitiendo orígenes locales");
         } else {
-            // Producción: solo frontendUrl específico
             String frontendUrl = appConfig.getFrontend().getUrl();
             if (frontendUrl == null || frontendUrl.isEmpty()) {
-                frontendUrl = "https://your-frontend-domain.com"; // Cambiar por tu dominio real
+                frontendUrl = "https://your-frontend-domain.com";
             }
             configuration.setAllowedOriginPatterns(Arrays.asList(frontendUrl));
             System.out.println("[CORS CONFIG] PROD: Permitiendo solo " + frontendUrl);
         }
 
-        // Métodos permitidos
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        
-        // Headers permitidos - IMPORTANTE para cookies
         configuration.setAllowedHeaders(Arrays.asList("*"));
-        
-        // Headers expuestos
         configuration.setExposedHeaders(Arrays.asList("Set-Cookie", "Authorization"));
-        
-        // CRÍTICO: permitir credenciales (cookies)
         configuration.setAllowCredentials(true);
-        
-        // Configurar max age para preflight
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
