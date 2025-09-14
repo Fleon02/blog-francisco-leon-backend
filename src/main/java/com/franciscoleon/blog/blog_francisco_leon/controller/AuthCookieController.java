@@ -15,7 +15,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -24,11 +23,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * YA NO SE VA A USAR, SE DEJA SOLO COMO REFERENCIA PARA AUTENTICACIÓN CON
- * COOKIES
- * PORQUE LAS COOKIES NO FUNCIONAN BIEN EN EL ENTORNO DE DESARROLLO
- */
 @RestController
 @RequestMapping("/api/auth-cookie")
 public class AuthCookieController {
@@ -118,12 +112,22 @@ public class AuthCookieController {
             log.info("[DEBUG] Header Set-Cookie agregado: {}", setCookieHeader);
 
         } else {
-            log.info("[DEBUG] Configurando cookie para producción");
+           log.info("[DEBUG] Configurando cookie para producción");
+
+            // MÉTODO 2: También header manual como backup
             String setCookieHeader = String.format(
-                    "token=%s; Max-Age=%d; Path=/; Secure; HttpOnly; SameSite=None",
+                    "token=%s; Max-Age=%d; Path=/; Secure; HttpOnly; SameSite=None;",
                     token, 24 * 60 * 60);
             response.addHeader("Set-Cookie", setCookieHeader);
-            log.info("[DEBUG] Header Set-Cookie (PROD): {}", setCookieHeader);
+
+            // Headers CORS muy específicos
+            response.setHeader("Access-Control-Allow-Credentials", "true");
+            response.setHeader("Access-Control-Allow-Origin", origin);
+            response.setHeader("Vary", "Origin");
+
+            log.info("[DEBUG] Cookie addCookie() configurada");
+            log.info("[DEBUG] Header Set-Cookie manual: {}", setCookieHeader);
+            log.info("[DEBUG] Origin permitido: {}", origin);
         }
 
         // Verificar que el header se estableció
@@ -183,11 +187,26 @@ public class AuthCookieController {
     public ResponseEntity<Map<String, Object>> logout(HttpServletResponse response) {
 
         log.info("Logout");
-        Cookie cookie = new Cookie("token", null);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(0);
-        response.addCookie(cookie);
+
+        String activeProfile = Arrays.stream(env.getActiveProfiles()).findFirst().orElse("dev");
+        log.info("[DEBUG] Logout - Active Profile: {}", activeProfile);
+
+        if (activeProfile.equals("dev")) {
+            log.info("[DEBUG] Configurando logout cookie para desarrollo");
+
+            // Header Set-Cookie manual para desarrollo
+            String setCookieHeader = "token=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax";
+            response.addHeader("Set-Cookie", setCookieHeader);
+            log.info("[DEBUG] Header logout Set-Cookie agregado: {}", setCookieHeader);
+
+        } else {
+            log.info("[DEBUG] Configurando logout cookie para producción");
+
+            // Header Set-Cookie manual para producción
+            String setCookieHeader = "token=; Max-Age=0; Path=/; Secure; HttpOnly; SameSite=None;";
+            response.addHeader("Set-Cookie", setCookieHeader);
+            log.info("[DEBUG] Header logout Set-Cookie agregado: {}", setCookieHeader);
+        }
 
         Map<String, Object> res = new HashMap<>();
         res.put("message", "Sesión cerrada");
